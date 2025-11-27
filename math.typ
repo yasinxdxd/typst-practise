@@ -75,6 +75,27 @@ As shown in @CNN, Alice sends a message #mtb("m") to the legitimate receiver Bob
 
 Without loss of generality, we take the example of transmitting a text message i.e., $mtb(m) = [w_1, w_2, ..., w_L]$ where $w_l$ denotes the $l^"th"$ word in the sentence. At the sender end, the message passes through a semantic encoder to obtain  a semantic feature #mtb("f"), then #mtb("f") is input into a cipher encoder to generate ciphertext #mtb("c"), and #mtb("c") is converted into asymbol stream #mtb("x") using a channel encoder, which is expressed as
 
-$  upright(bold(x)) = C e_gamma (E n_beta (S e_alpha (mtb(m)), K_kappa (mtb(k)))),
 $
-where $S e_alpha (circle.filled.tiny)$ is the semantic encoder network with parameter set $mtb(alpha)$, $E n_beta (circle.filled.tiny)$ is the encrypt network with parameter set $beta$, $C e_gamma (circle.filled.tiny)$ is the channel encoder network with parameter set $gamma$ and $K_kappa (circle.filled.tiny)$ is key processing network with parameter set $kappa$.
+  upright(bold(x)) = C e_gamma (E n_beta (S e_alpha (mtb(m)), K_kappa (mtb(k)))),
+$\
+where $S e_alpha (circle.filled.tiny)$ is the semantic encoder network with parameter set $mtb(alpha)$, $E n_beta (circle.filled.tiny)$ is the encrypt network with parameter set $beta$, $C e_gamma (circle.filled.tiny)$ is the channel encoder network with parameter set $gamma$ and $K_kappa (circle.filled.tiny)$ is key processing network with parameter set $kappa$.\
+
+As a legitimate receiver, Bob receives the signal $hat(bold("y"))$ with the interference and noise which is represented as
+$ hat(bold("y")) = h bold("x") + bold("n") , $
+where $h$ is the channel coefficient assumed to be constant for a quasi-static channel, and $bold("n")$ is the additive white Gaussian noise (AWGN) with a mean of zero and a variance $sigma^2_n$. With the support of channel, chiper and semantic decoders, $hat(bold("y"))$ is decoded to reconstruct the original message as
+$
+  hat(bold("m")) = S d_(bold(theta)) ( D e_(bold(delta)) (C d_(bold(chi)) (hat(bold("y"))), K_(bold(kappa)) (bold("k")))),
+$\
+ in which $S d_(bold(theta)) (circle.filled.tiny)$ is the semantic decoder network with parameter set $bold(theta)$, $D e_(bold(delta)) (circle.filled.tiny)$ is the decrypt network with parameter set $bold(delta)$ and $C d_(bold(chi)) (circle.filled.tiny)$ is the channel decoder network with parameter set $bold(chi)$. Moreover, it is straightforward that Alice and Bob utilize the same key processing network $K_(bold(kappa)) (circle.filled.tiny)$ to obtain the same session key in the symmetric  encryption.
+
+ The atacker Eve eavesdrops on the open wireless channel, intercepting the transmitted signal $macron(bold("y"))$. As the session key $bold("k")$ secretly shared between legitimate users is inaccessible, Eve replaces it with a random number $bold("r")$ to reconstruct the original message as
+ $
+   macron(bold("m")) = S d_(dash(bold(theta))) (D e_(dash(bold(delta))) (C d_(dash(bold(chi))) (hat(bold("y"))), bold("r"))).
+ $\
+ It is noteworthy that despite the similar network structure between Bob and Eve, the parameter sets differ due to Eve's absence from the joint training between Alice and Bob.
+
+ = Propesed SecreDSC System
+
+ This section presents the basic model of the proposed semantic communication system SecureDSC, including the composition of the network layers and the procedures of encryption and decryption. We then  discuss the design of loss function and the adversarial training process that provides the confidentiality protection of transmitted messages.
+
+ == Basic Model
