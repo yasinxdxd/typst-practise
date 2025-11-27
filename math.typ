@@ -86,16 +86,42 @@ where $h$ is the channel coefficient assumed to be constant for a quasi-static c
 $
   hat(bold("m")) = S d_(bold(theta)) ( D e_(bold(delta)) (C d_(bold(chi)) (hat(bold("y"))), K_(bold(kappa)) (bold("k")))),
 $\
- in which $S d_(bold(theta)) (circle.filled.tiny)$ is the semantic decoder network with parameter set $bold(theta)$, $D e_(bold(delta)) (circle.filled.tiny)$ is the decrypt network with parameter set $bold(delta)$ and $C d_(bold(chi)) (circle.filled.tiny)$ is the channel decoder network with parameter set $bold(chi)$. Moreover, it is straightforward that Alice and Bob utilize the same key processing network $K_(bold(kappa)) (circle.filled.tiny)$ to obtain the same session key in the symmetric  encryption.
+in which $S d_(bold(theta)) (circle.filled.tiny)$ is the semantic decoder network with parameter set $bold(theta)$, $D e_(bold(delta)) (circle.filled.tiny)$ is the decrypt network with parameter set $bold(delta)$ and $C d_(bold(chi)) (circle.filled.tiny)$ is the channel decoder network with parameter set $bold(chi)$. Moreover, it is straightforward that Alice and Bob utilize the same key processing network $K_(bold(kappa)) (circle.filled.tiny)$ to obtain the same session key in the symmetric  encryption.
 
- The atacker Eve eavesdrops on the open wireless channel, intercepting the transmitted signal $macron(bold("y"))$. As the session key $bold("k")$ secretly shared between legitimate users is inaccessible, Eve replaces it with a random number $bold("r")$ to reconstruct the original message as
- $
-   macron(bold("m")) = S d_(dash(bold(theta))) (D e_(dash(bold(delta))) (C d_(dash(bold(chi))) (hat(bold("y"))), bold("r"))).
- $\
- It is noteworthy that despite the similar network structure between Bob and Eve, the parameter sets differ due to Eve's absence from the joint training between Alice and Bob.
+The atacker Eve eavesdrops on the open wireless channel, intercepting the transmitted signal $macron(bold("y"))$. As the session key $bold("k")$ secretly shared between legitimate users is inaccessible, Eve replaces it with a random number $bold("r")$ to reconstruct the original message as
+$
+  macron(bold("m")) = S d_(dash(bold(theta))) (D e_(dash(bold(delta))) (C d_(dash(bold(chi))) (hat(bold("y"))), bold("r"))).
+$\
+It is noteworthy that despite the similar network structure between Bob and Eve, the parameter sets differ due to Eve's absence from the joint training between Alice and Bob.
 
- = Propesed SecreDSC System
+= Propesed SecreDSC System
 
- This section presents the basic model of the proposed semantic communication system SecureDSC, including the composition of the network layers and the procedures of encryption and decryption. We then  discuss the design of loss function and the adversarial training process that provides the confidentiality protection of transmitted messages.
+This section presents the basic model of the proposed semantic communication system SecureDSC, including the composition of the network layers and the procedures of encryption and decryption. We then  discuss the design of loss function and the adversarial training process that provides the confidentiality protection of transmitted messages.
 
- == Basic Model
+== Basic Model
+
+@CNN2 illustrates the whole sturcture of the neural network. Tje embeding layer first performs a transformation on the input message $bold("M")$, mapping it to a dense vector representation. Then, the semantic encoder $S e_(bold(alpha))(circle.filled.tiny)$ extracts semantic features from the embedded input. Subsequently, extracted features $bold("F")$ and keys $bold("K")$ serve as inputs for the encryptor $E n_(beta)(circle.filled.tiny)$ to generate the ciphertext $bold("C")$. Before being transmitted over the channel, the ciphertext is input into the channel encoder $C e_gamma(circle.filled.tiny)$ to generate symbol streams. The network on the 
+
+
+#figure(
+  neural-net(
+    layers: (2, 3, 1),
+    show-weights: true,
+    weights: (
+      (
+        (0.1, -0.3, 0.8),
+        (0.2, 0.9, -0.4),
+      ),
+      (
+        (0.6,),
+        (-0.7,),
+        (0.3,),
+      ),
+    ),
+    weight-color: black,
+    neuron-radius: 10pt,
+    layer-spacing: 75pt,
+    label-layers: true,
+  ),
+  caption: [The model of proposed secure text semantic communication system.],
+) <CNN2>
