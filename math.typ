@@ -1,6 +1,11 @@
 #import "@preview/charged-ieee:0.1.4": ieee
 #import "@preview/wrap-it:0.1.1": wrap-content
-#import "nn.typ": neural-net
+#import "nn.typ": neural-net, cnn-net
+
+#import "@preview/algorithmic:1.0.7"
+#import algorithmic: style-algorithm, algorithm-figure
+
+#import "@preview/commute:0.3.0": node, arr, commutative-diagram
 
 #show: ieee.with(
   title: [Secure Transmission in Wireless Semantic Communications With Adversarial Training],
@@ -81,7 +86,7 @@ $\
 where $S e_alpha (circle.filled.tiny)$ is the semantic encoder network with parameter set $mtb(alpha)$, $E n_beta (circle.filled.tiny)$ is the encrypt network with parameter set $beta$, $C e_gamma (circle.filled.tiny)$ is the channel encoder network with parameter set $gamma$ and $K_kappa (circle.filled.tiny)$ is key processing network with parameter set $kappa$.\
 
 As a legitimate receiver, Bob receives the signal $hat(bold("y"))$ with the interference and noise which is represented as
-$ hat(bold("y")) = h bold("x") + bold("n") , $
+$ hat(bold("y")) = h bold("x") + bold("n") , $\
 where $h$ is the channel coefficient assumed to be constant for a quasi-static channel, and $bold("n")$ is the additive white Gaussian noise (AWGN) with a mean of zero and a variance $sigma^2_n$. With the support of channel, chiper and semantic decoders, $hat(bold("y"))$ is decoded to reconstruct the original message as
 $
   hat(bold("m")) = S d_(bold(theta)) ( D e_(bold(delta)) (C d_(bold(chi)) (hat(bold("y"))), K_(bold(kappa)) (bold("k")))),
@@ -100,28 +105,136 @@ This section presents the basic model of the proposed semantic communication sys
 
 == Basic Model
 
-@CNN2 illustrates the whole sturcture of the neural network. Tje embeding layer first performs a transformation on the input message $bold("M")$, mapping it to a dense vector representation. Then, the semantic encoder $S e_(bold(alpha))(circle.filled.tiny)$ extracts semantic features from the embedded input. Subsequently, extracted features $bold("F")$ and keys $bold("K")$ serve as inputs for the encryptor $E n_(beta)(circle.filled.tiny)$ to generate the ciphertext $bold("C")$. Before being transmitted over the channel, the ciphertext is input into the channel encoder $C e_gamma(circle.filled.tiny)$ to generate symbol streams. The network on the 
+@CNN2 illustrates the whole sturcture of the neural network. Tje embeding layer first performs a transformation on the input message $bold("M")$, mapping it to a dense vector representation. Then, the semantic encoder $S e_(bold(alpha))(circle.filled.tiny)$ extracts semantic features from the embedded input. Subsequently, extracted features $bold("F")$ and keys $bold("K")$ serve as inputs for the encryptor $E n_(beta)(circle.filled.tiny)$ to generate the ciphertext $bold("C")$. Before being transmitted over the channel, the ciphertext is input into the channel encoder $C e_gamma(circle.filled.tiny)$ to generate symbol streams. The network on the receiver end is symmetrical to that on the transmitter end, except for a prediction layer with Softmax as the activation function at the end for outouttşng the decoded results $bold("M")$
 
 
 #figure(
-  neural-net(
-    layers: (2, 3, 1),
-    show-weights: true,
-    weights: (
-      (
-        (0.1, -0.3, 0.8),
-        (0.2, 0.9, -0.4),
+  placement: top,
+  scope: "parent",
+  pad(y: -40pt,
+  align(center)[
+    #cnn-net(
+      layers: (
+        (type: "conv", label: "Conv2D", dims: (28, 28, 32), params: "3×3"),
+        (type: "pool", label: "MaxPool", dims: (14, 14, 32), params: "2×2"),
+        (type: "conv", label: "Conv2D", dims: (14, 14, 64), params: "3×3"),
+        (type: "pool", label: "MaxPool", dims: (7, 7, 64), params: "2×2"),
+        (type: "flatten", label: "Flatten", dims: (3136,)),
+        (type: "dense", label: "Dense", dims: (256,)),
+        (type: "dense", label: "Dense", dims: (128,)),
+        (type: "dense", label: "Output", dims: (10,)),
       ),
-      (
-        (0.6,),
-        (-0.7,),
-        (0.3,),
-      ),
-    ),
-    weight-color: black,
-    neuron-radius: 10pt,
-    layer-spacing: 75pt,
-    label-layers: true,
+      box-width: 36pt,
+      box-height: 48pt,
+      layer-spacing: 25pt,
+      
+      show-labels: true,
+      show-dimensions: true,
+    )
+  ]
   ),
-  caption: [The model of proposed secure text semantic communication system.],
-) <CNN2>
+  caption: align(start)[The whole neural network and components for the proposed SecureDSC system.],
+)<CNN2>
+
+#let fig_3 = align(center)[#commutative-diagram(
+  node((0, 0), $X$),
+  node((0, 1), $Y$),
+  node((1, 0), $X \/ "ker"(f)$, "quot"),
+  arr($X$, $Y$, $f$),
+  arr("quot", (0, 1), $tilde(f)$, label-pos: right, "dashed", "inj"),
+  arr($X$, "quot", $pi$),
+)]
+
+#show: style-algorithm
+#let algo_fig = algorithm-figure(
+  "Training Algorithm of SecureDSC",
+  vstroke: .5pt + luma(200),
+  {
+    import algorithmic: *
+    Procedure(
+      "Encrypt_Decrypt",
+      ("A", "n", "v"),
+      {
+        Comment[Initialize the search range]
+        Assign[$l$][$1$]
+        Assign[$r$][$n$]
+        LineBreak
+        While(
+          $l <= r$,
+          {
+            Assign([mid], FnInline[floor][$(l + r) / 2$])
+            IfElseChain(
+              $A ["mid"] < v$,
+              {
+                Assign[$l$][$"mid" + 1$]
+              },
+              [$A ["mid"] > v$],
+              {
+                Assign[$r$][$"mid" - 1$]
+              },
+              Return[mid],
+            )
+          },
+        )
+        Return[*null*]
+      },
+    )
+  }
+)
+
+#figure(
+  fig_3,
+  caption: align(start)[The detailed encryption and decryption process and network interconnection schematics.]
+)<CNN3>
+
+== Loss Function Design and Training Process
+
+Given that the data is coveyed in textual format, cross-entropy (CE) is employed as the loss function to quantify the discrepancy between two sentences as follows
+
+$
+ &ℒ_(C E) (bold("m")_1, bold("m")_2)\
+ &= - sum_(l=1) p(w_l) log q(w_l) + (1 - p(w_l)) log(1 - q(w_l))
+$\
+where $p(w_l)$ and $q(w_l)$ denote the real probability of the $l^"th"$ word $w_l$ appearing in message $bold("m")_1$ and the predicted probability of it appearing in $bold("m")_2$, respectively.
+
+To accomplish successful transmission and fulfill aforementioned goals, we perform joint and independent training of net, modules for legitimate transmitters and receivers. Additionally, we devis an adversarial training mechanism that account for the impact of adversaries throughout the training process.
+
+For the independent training of the semantic encoder and decoder, the loss function is designed as
+
+$
+ ℒ_( s e m) (bold("s"), bold(hat("s")); bold(alpha), bold(theta)) = ℒ_(C E) (bold("s"), S d_(bold(theta)) (S e_(bold(alpha)) (bold("s")))),
+$\
+where $bold("s")$ is the batch data. Likewise, to train the encryptor, decryptor, and the key processing module independently, the loss function follows the subsequent expression
+
+$
+ &ℒ_(c i p) (bold("s"), bold(hat("s")); bold(Beta), bold(delta), bold(kappa))\
+ &= ℒ_(C E) (bold("s"), D e_delta (E n_Beta (bold("s"), K_kappa (bold("k"))), K_kappa (bold("k")))).
+$\
+Hence the basic modules in the network can operate independently using the aforementioned two loss functions.
+
+At the same time, to jointly train the entire network, the loss function for the legitimate receiver Bob is designed as
+
+$
+  ℒ_B ( bold("m"), bold(hat("m")); bold(chi), bold(delta), bold(theta), bold(kappa) ) = ℒ_(C E) (bold("m"), bold(hat("m"))),
+$\
+where $bold(hat("m"))$ is the received message defşned in (3). Considering the adversary Eve in the channel with the sane network structure as the legitimate receiver, the loss function is defined similarly as
+
+$
+  ℒ_E ( bold("m"), bold(dash("m")); bold(dash(chi)), bold(dash(delta)), bold(dash(theta)), bold(dash(kappa)) ) = ℒ_(C E) (bold("m"), bold(dash("m"))).
+$
+
+Utilizing adversarial cryptography, we combine the above two loss functions to design the joint loss function as
+
+$
+  &ℒ_B ( bold("m"), bold(hat("m")), bold(dash("m")); bold(alpha), bold(beta), bold(gamma), bold(chi), bold(delta), bold(theta), bold(kappa) )\
+  &= ℒ_B + "abs"(ℒ_E - lambda)
+$\
+where $"abs"(circle.filled.tiny)$ is the absolute value function and $lambda$ is the hper parameter for adversarial training to restrict Eve's ability of information reconstruction.
+
+As shown in @Algo1, the entire network is updated sequentially according to the above loss functions. Simce the primary focus of the SecreDSC system is to protect the confidentiality of semantic features, the training of channel codecs is ommited here and the parameters are updated throughout the training process. In this algorithm, the keys shared between Alice and Bob are randomized for each message, awhile Eve replaces them with random sequences as mentioned above.
+
+
+#algo_fig<Algo1>
+
+= Performance Evaluation
+== Performance Evaluation of the Propesed SecreDSC
