@@ -7,6 +7,10 @@
 
 #import "@preview/commute:0.3.0": node, arr, commutative-diagram
 
+// #import "@preview/catppuccin:1.0.1": catppuccin, flavors
+// #show: catppuccin.with(flavors.frappe)
+
+
 #show: ieee.with(
   title: [Secure Transmission in Wireless Semantic Communications With Adversarial Training],
   abstract: [
@@ -93,13 +97,13 @@ $
 $\
 in which $S d_(bold(theta)) (circle.filled.tiny)$ is the semantic decoder network with parameter set $bold(theta)$, $D e_(bold(delta)) (circle.filled.tiny)$ is the decrypt network with parameter set $bold(delta)$ and $C d_(bold(chi)) (circle.filled.tiny)$ is the channel decoder network with parameter set $bold(chi)$. Moreover, it is straightforward that Alice and Bob utilize the same key processing network $K_(bold(kappa)) (circle.filled.tiny)$ to obtain the same session key in the symmetric  encryption.
 
-The atacker Eve eavesdrops on the open wireless channel, intercepting the transmitted signal $macron(bold("y"))$. As the session key $bold("k")$ secretly shared between legitimate users is inaccessible, Eve replaces it with a random number $bold("r")$ to reconstruct the original message as
+The attacker Eve eavesdrops on the open wireless channel, intercepting the transmitted signal $macron(bold("y"))$. As the session key $bold("k")$ secretly shared between legitimate users is inaccessible, Eve replaces it with a random number $bold("r")$ to reconstruct the original message as
 $
   macron(bold("m")) = S d_(dash(bold(theta))) (D e_(dash(bold(delta))) (C d_(dash(bold(chi))) (hat(bold("y"))), bold("r"))).
 $\
 It is noteworthy that despite the similar network structure between Bob and Eve, the parameter sets differ due to Eve's absence from the joint training between Alice and Bob.
 
-= Propesed SecreDSC System
+= Proposed SecreDSC System
 
 This section presents the basic model of the proposed semantic communication system SecureDSC, including the composition of the network layers and the procedures of encryption and decryption. We then  discuss the design of loss function and the adversarial training process that provides the confidentiality protection of transmitted messages.
 
@@ -237,4 +241,105 @@ As shown in @Algo1, the entire network is updated sequentially according to the 
 #algo_fig<Algo1>
 
 = Performance Evaluation
-== Performance Evaluation of the Propesed SecreDSC
+== Performance Evaluation of the Proposed SecreDSC
+
+We very first verify the feasibility of the proposed SecureDSC by evaluating loss functions of Bob and Eve under Signal-to-Noise Ratios (SNRs) of 12dB and 6dB, with varying learning rates _lr_, as shown in @Fig4. Adam optimizer is adopted with $Beta_1 = 0.9$, $Beta_2 = 0.98$ andl $lambda = 6$. From the figure it is evident that during the training process, $ℒ_B$ gradually decreases and finally converges, while $ℒ_E$ stabilizes at a sigfnificantly higher level due to the influence of $lambda$. Meanwhile, $ℒ_B$ converges to alower level as the SNR increases. According to results to a smoother variation in the loss function, which hence is selected for subsequent experiments.
+
+#show figure.where(
+  kind: "table"
+): set figure.caption(position: top)
+
+#figure(
+  kind: "table",
+  supplement: [Table],
+  caption: [ #upper("The Settings of the Proposed SecureDSC")],
+  table(
+  columns: 4,
+  [], [*Layer Name*], [*Units*], [*Activation*],
+  [*Semantic Encoder*], [4xTransformer Encoder], [128(8 heads)], [Linear],
+  [*Encryptor*], [4xTransformer Encoder], [128(8 heads)], [Butter (room temp.)],
+  [Channel Decoder], [Dense],[128], [Relu],
+  [*Decryptor*], [Cane sugar],[Cane sugar],[Cane sugar],
+  [*Semantic Decoder*],[4xTransformer Encoder], [70% cocoa chocolate],
+  [100g], [35-40% cocoa chocolate],
+  [2], [Eggs],
+  [Pinch], [Salt],
+  [Drizzle], [Vanilla extract],
+)
+)<table1>
+
+
+#import "@preview/cetz:0.4.2": canvas, draw
+#import "@preview/cetz-plot:0.1.3": plot
+
+
+#let style = (stroke: black, fill: rgb("#0a0a994b"))
+
+#let f1(x) = calc.sin(x)
+#let fn = (
+  ($ x - x^3"/"3! $, x => x - calc.pow(x, 3)/6),
+  ($ x - x^3"/"3! - x^5"/"5! $, x => x - calc.pow(x, 3)/6 + calc.pow(x, 5)/120),
+  ($ x - x^3"/"3! - x^5"/"5! - x^7"/"7! $, x => x - calc.pow(x, 3)/6 + calc.pow(x, 5)/120 - calc.pow(x, 7)/5040),
+)
+
+#set text(size: 10pt)
+
+#figure(
+canvas({
+  import draw: *
+
+  // Set-up a thin axis style
+  set-style(axes: (stroke: .5pt, tick: (stroke: .5pt)),
+            legend: (stroke: none, orientation: ttb, item: (spacing: .3), scale: 80%))
+
+  plot.plot(size: (8, 6),
+    x-tick-step: calc.pi/2,
+    x-format: plot.formats.multiple-of,
+    y-tick-step: 2, y-min: -2.5, y-max: 2.5,
+    legend: "inner-north",
+    {
+      let domain = (-1.1 * calc.pi, +1.1 * calc.pi)
+
+      for ((title, f)) in fn {
+        plot.add-fill-between(f, f1, domain: domain,
+          style: (stroke: none), label: title)
+      }
+      plot.add(f1, domain: domain, label: $ sin x  $,
+        style: (stroke: black))
+    })
+}),
+caption: "Loss of Bob and Eve under different SNRs and learning rates."
+)<Fig4>
+
+#set table(
+  stroke: (x, y) => if (y == 0 or y == 3){
+    (bottom: 0.7pt + black)
+  },
+)
+
+#figure(
+  kind: "table",
+  supplement: [Table],
+  caption: [ #upper("Complexity Analyses With Different Frameworks")],
+  table(
+    columns: 4,
+    table.header(
+      [],
+      [*Parameters*],
+      [*Training Time*],
+      [*Inference Time*],
+    ),
+    [*DeepSC*], [12.0], [92.1], [92.1],
+    [*ESCS*], [16.6], [104],[12.0],
+    [*SecureDSC*],[24.7], [16.6], [0.001]
+  )
+)<table2>
+
+
+== Comparison of Different Systems
+
+The confidentiality of the proposed SecureDSC is further evaluated by comparing it with the classic DeepSC @DeepLearningEnabledSemanticCommunicationSystems_2 and the recent encrypted semantic communication system ESCS @ESCS. Basic semantic and channeş codecs for all schemes are implemented based on DeepSC with the specific parameter settings detailed in @table1. ESCS and SecureDSC possess different workflows when encrypting semantics. To ensure a fair comparison, their network setups for encryption and decryption are identical, and the loss function used for training are based on (10). Loss and BLEU scores (1-gram) after  500 epochs at different SNRs for DeepSC, SecreDSC, and ESCS are shown @Fig4, respectively.
+
+= Conclusion
+
+This letter proposed an adversarial cryptography-based semantic communication system, named SecreDSC, to guarantee secure textual feature transmission. The proposed system establishes a tripartie model consisting of a legit, transmitter, a legitimate receiver, as well as an attacker. By introducing an adversarial cryptographic mechanism during the training phase, the confidentiality for the extracted semantics is ensured. Additionally, with the joint design of source-encryption-channel, the entire system ensures overall performance on semantic communications. Furthermore, experiments under different transmission and adversary assumptions validate the effectiveness and security of the solution.
